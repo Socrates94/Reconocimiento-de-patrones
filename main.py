@@ -27,7 +27,7 @@ def main():
     disc.ejecutar()
     
     # 4. Análisis Exploratorio Matemático (PCA, CCA, Pearson)
-    ana.ejecutar()
+    # ana.ejecutar()
     
     print("\n======================================================")
     print("  PIPELINE COMPLETADO EXITOSAMENTE")
