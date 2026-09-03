@@ -24,10 +24,10 @@ def main():
     norm.ejecutar()
     
     # 3. Discretizar los datos Min-Max
-    disc.ejecutar()
+    #disc.ejecutar()
     
     # 4. Análisis Exploratorio Matemático (PCA, CCA, Pearson)
-    # ana.ejecutar()
+    ana.ejecutar()
     
     print("\n======================================================")
     print("  PIPELINE COMPLETADO EXITOSAMENTE")

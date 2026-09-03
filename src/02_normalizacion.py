@@ -7,6 +7,7 @@ DIR_RAW = os.path.join(BASE_DIR, 'data', '1_raw')
 DIR_TRANSFORMED = os.path.join(BASE_DIR, 'data', '3_transformed')
 
 def normalizar(archivo_entrada, archivo_salida, metodo='minmax'):
+    
     print(f"Procesando {os.path.basename(archivo_entrada)} con el método {metodo}...")
     
     # 1. Leer el archivo txt (pandas asume que está separado por comas)
@@ -39,11 +40,14 @@ def normalizar(archivo_entrada, archivo_salida, metodo='minmax'):
     print(f" -> ¡Éxito! Guardado como {os.path.basename(archivo_salida)}\n")
 
 def ejecutar():
+    
     print("=== INICIANDO ETAPA 2: NORMALIZACION ===")
+    
     metodos = ['minmax', 'zscore', 'robust']
     archivos = ['Slice', 'Vh']
     
     for name in archivos:
+        
         archivo_entrada = os.path.join(DIR_RAW, f'{name}.txt')
         if not os.path.exists(archivo_entrada):
             print(f"Advertencia: No se encontró el archivo original {archivo_entrada}")

@@ -7,7 +7,8 @@ DIR_RAW = os.path.join(BASE_DIR, 'data', '1_raw')
 DIR_PROCESSED = os.path.join(BASE_DIR, 'data', '2_processed')
 
 def process_file(input_file, output_csv):
-    print(f"Convirtiendo {os.path.basename(input_file)} a formato CSV para poderlo leer mas claro...")
+    
+    print(f"Convirtiendo {os.path.basename(input_file)} a formato CSV para poderlo leerlo con claridad..")
     
     # Simplemente leemos el archivo original y lo escribimos de nuevo sin alterar el orden
     with open(input_file, 'r') as f_in, open(output_csv, 'w', newline='') as f_out:
@@ -21,7 +22,9 @@ def process_file(input_file, output_csv):
     print(f" -> Guardado como {os.path.basename(output_csv)}\n")
 
 def ejecutar():
+    
     print("=== INICIANDO ETAPA 1: PREPROCESAMIENTO ===")
+    
     for name in ['Slice', 'Vh']:
         archivo_entrada = os.path.join(DIR_RAW, f'{name}.txt')
         archivo_salida = os.path.join(DIR_PROCESSED, f'{name}.csv')
