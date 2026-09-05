@@ -10,6 +10,7 @@ warnings.filterwarnings('ignore')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR_TRANSFORMED = os.path.join(BASE_DIR, 'data', '3_transformed')
+DIR_CORRELACION = os.path.join(BASE_DIR, 'data', '4_correlacion')
 
 def matriz_covarianza_pearson(df, nombre_archivo, threshold=0.98):
     print("\n--- 1. Matriz de Covarianza y Pearson ---")
@@ -21,7 +22,7 @@ def matriz_covarianza_pearson(df, nombre_archivo, threshold=0.98):
     correlacion = X.corr(method='pearson')
     
     # Exportamos la matriz a un archivo CSV para poder apreciarla a detalle
-    archivo_csv = os.path.join(DIR_TRANSFORMED, f"matriz_pearson_{nombre_archivo}")
+    archivo_csv = os.path.join(DIR_CORRELACION, f"matriz_pearson_{nombre_archivo}")
     correlacion.to_csv(archivo_csv)
     print(f"  [+] Matriz exportada a: {os.path.basename(archivo_csv)}")
     
@@ -68,7 +69,7 @@ def remover_caracteristicas_correlacionadas(df, nombre_archivo, threshold=0.98):
     
     # 6. Guardamos el nuevo dataset
     nombre_limpio = nombre_archivo.replace('.csv', '_pearson_limpio.csv')
-    archivo_csv = os.path.join(DIR_TRANSFORMED, nombre_limpio)
+    archivo_csv = os.path.join(DIR_CORRELACION, nombre_limpio)
     df_limpio.to_csv(archivo_csv, index=False, header=False)
     
     print(f"  Columnas originales: {X.shape[1]}")
@@ -76,34 +77,55 @@ def remover_caracteristicas_correlacionadas(df, nombre_archivo, threshold=0.98):
     print(f"  Columnas finales: {X_limpio.shape[1]}")
     print(f"  [+] Dataset listo para entrenar guardado en: {nombre_limpio}")
 
-# def reduccion_pca(X, n_componentes=5):
-#     print(f"\n--- 2. Reducción de Dimensionalidad con PCA ({n_componentes} componentes) ---")
-#     pca = PCA(n_components=n_componentes)
-#     X_reducido = pca.fit_transform(X)
+def reduccion_pca(X, y, nombre_archivo, n_componentes=5):
+    print(f"\n--- 2. Reducción de Dimensionalidad con PCA ({n_componentes} componentes) ---")
+    pca = PCA(n_components=n_componentes)
+    X_reducido = pca.fit_transform(X)
     
-#     varianza_explicada = pca.explained_variance_ratio_
-#     varianza_total = np.sum(varianza_explicada) * 100
+    varianza_explicada = pca.explained_variance_ratio_
+    varianza_total = np.sum(varianza_explicada) * 100
         
-#     print(f"-> Varianza total conservada por las {n_componentes} componentes: {varianza_total:.2f}%")
-#     return X_reducido
+    print(f"  -> Varianza total conservada: {varianza_total:.2f}%")
+    
+    # Guardar el dataset reducido
+    df_reducido = pd.DataFrame(X_reducido)
+    df_pca = pd.concat([df_reducido, y.reset_index(drop=True)], axis=1)
+    
+    nombre_limpio = nombre_archivo.replace('.csv', f'_pca_{n_componentes}_limpio.csv')
+    archivo_csv = os.path.join(DIR_CORRELACION, nombre_limpio)
+    df_pca.to_csv(archivo_csv, index=False, header=False)
+    print(f"  [+] Dataset PCA guardado en: {nombre_limpio}")
+    
+    return X_reducido
 
-# def analisis_cca(X, y):
-#     print("\n--- 3. Análisis de Correlación Canónica (CCA) ---")
-#     encoder = OneHotEncoder(sparse_output=False)
-#     Y_encoded = encoder.fit_transform(y.values.reshape(-1, 1))
+def analisis_cca(X, y, nombre_archivo):
+    print("\n--- 3. Análisis de Correlación Canónica (CCA) ---")
+    encoder = OneHotEncoder(sparse_output=False)
+    Y_encoded = encoder.fit_transform(y.values.reshape(-1, 1))
     
-#     n_clases = Y_encoded.shape[1]
-#     cca = CCA(n_components=n_clases)
+    n_clases = Y_encoded.shape[1]
+    cca = CCA(n_components=n_clases)
     
-#     cca.fit(X, Y_encoded)
-#     X_c, Y_c = cca.transform(X, Y_encoded)
+    cca.fit(X, Y_encoded)
+    X_c, Y_c = cca.transform(X, Y_encoded)
     
-#     correlacion_canonica = np.corrcoef(X_c.T, Y_c.T).diagonal(offset=n_clases)
+    correlacion_canonica = np.corrcoef(X_c.T, Y_c.T).diagonal(offset=n_clases)
     
-#     for i, corr in enumerate(correlacion_canonica):
-#         print(f"  Correlación canónica del Componente {i+1} (Características vs Clase): {corr:.4f}")
+    for i, corr in enumerate(correlacion_canonica):
+        print(f"  Correlación canónica del Componente {i+1} (Características vs Clase): {corr:.4f}")
+        
+    # Guardar el dataset transformado por CCA
+    df_c = pd.DataFrame(X_c)
+    df_cca = pd.concat([df_c, y.reset_index(drop=True)], axis=1)
+    
+    nombre_limpio = nombre_archivo.replace('.csv', '_cca_limpio.csv')
+    archivo_csv = os.path.join(DIR_CORRELACION, nombre_limpio)
+    df_cca.to_csv(archivo_csv, index=False, header=False)
+    print(f"  [+] Dataset CCA guardado en: {nombre_limpio}")
 
 def ejecutar():
+    # Aseguramos que la nueva carpeta de correlación exista
+    os.makedirs(DIR_CORRELACION, exist_ok=True)
     
     print("\n=== INICIANDO ETAPA 3: ANÁLISIS DE CORRELACIÓN Y REDUCCIÓN ===")
     
@@ -125,8 +147,8 @@ def ejecutar():
         
         matriz_covarianza_pearson(df, nombre, threshold=0.98)
         remover_caracteristicas_correlacionadas(df, nombre, threshold=0.98)
-        # reduccion_pca(X, n_componentes=10)  # Comentado a petición del usuario
-        # analisis_cca(X, y)                  # Comentado a petición del usuario
+        reduccion_pca(X, y, nombre, n_componentes=10)
+        analisis_cca(X, y, nombre)
 
 if __name__ == "__main__":
     ejecutar()
