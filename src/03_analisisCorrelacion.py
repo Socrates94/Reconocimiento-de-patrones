@@ -13,6 +13,19 @@ DIR_TRANSFORMED = os.path.join(BASE_DIR, 'data', '3_transformed')
 DIR_CORRELACION = os.path.join(BASE_DIR, 'data', '4_correlacion')
 
 def matriz_covarianza_pearson(df, nombre_archivo, threshold=0.98):
+    """
+    Correlación de Pearson:
+    Mide la relación matemática (línea recta) entre dos columnas (de -1 a 1).
+    
+    ¿Cuándo usarlo?
+    - Ideal para encontrar "clones" (características redundantes que dicen lo mismo) para poder borrar una.
+    - Cuando tus datos son exclusivamente numéricos y continuos.
+    - Funciona excelente si asumes que la relación entre variables es lineal.
+    
+    ¿Cuándo NO usarlo?
+    - Si tus datos son categóricos (texto, etiquetas).
+    - Si la relación es compleja y no lineal (ej. exponencial o parabólica), Pearson marcará 0 aunque sí haya relación.
+    """
     print("\n--- 1. Matriz de Covarianza y Pearson ---")
     
     # 1. Separamos las características (X) de la clase final para no correlacionar con la etiqueta
@@ -78,6 +91,20 @@ def remover_caracteristicas_correlacionadas(df, nombre_archivo, threshold=0.98):
     print(f"  [+] Dataset listo para entrenar guardado en: {nombre_limpio}")
 
 def reduccion_pca(X, y, nombre_archivo, n_componentes=5):
+    """
+    PCA (Análisis de Componentes Principales):
+    Es una técnica de reducción de dimensionalidad que "aplasta" muchas columnas en unas pocas nuevas (componentes) 
+    rescatando la mayor cantidad de varianza (información útil) posible.
+    
+    ¿Cuándo usarlo?
+    - Cuando tienes DEMASIADAS características (cientos) y tu modelo es lento o se sobreajusta (Maldición de la Dimensionalidad).
+    - EXCLUSIVO para datos numéricos.
+    - OBLIGATORIO usarlo solo si los datos ya están normalizados (preferiblemente Z-Score).
+    
+    ¿Cuándo NO usarlo?
+    - ¡OJO! PCA es "No Supervisado". No le importa cuál es tu Clase/Etiqueta (y). A veces, al aplastar los datos, borra justo el pequeño detalle que diferenciaba la clase A de la B.
+    - No lo uses si tu jefe te pide saber EXACTAMENTE qué variables originales causaron la predicción. PCA mezcla todas las columnas y pierdes explicabilidad.
+    """
     print(f"\n--- 2. Reducción de Dimensionalidad con PCA ({n_componentes} componentes) ---")
     pca = PCA(n_components=n_componentes)
     X_reducido = pca.fit_transform(X)
@@ -99,6 +126,19 @@ def reduccion_pca(X, y, nombre_archivo, n_componentes=5):
     return X_reducido
 
 def analisis_cca(X, y, nombre_archivo):
+    """
+    CCA (Análisis de Correlación Canónica):
+    Busca transformar tus características (X) en nuevos componentes, pero de tal manera que estos componentes 
+    tengan la correlación MÁXIMA con la Clase que quieres predecir (Y).
+    
+    ¿Cuándo usarlo?
+    - A diferencia de PCA, CCA ES "Supervisado". Úsalo cuando tu prioridad #1 es que los componentes resultantes mantengan un fuerte vínculo con las clases a predecir.
+    - Sirve mucho si tu "Y" son múltiples variables a la vez o cuando transformas tus clases con One-Hot Encoding.
+    
+    ¿Cuándo NO usarlo?
+    - Si tus características originales (X) están exageradamente correlacionadas entre ellas, CCA colapsa matemáticamente. (Por eso el paso de Pearson para borrar clones antes de CCA es vital).
+    - Es pesado si hay más columnas que filas en tu dataset.
+    """
     print("\n--- 3. Análisis de Correlación Canónica (CCA) ---")
     encoder = OneHotEncoder(sparse_output=False)
     Y_encoded = encoder.fit_transform(y.values.reshape(-1, 1))

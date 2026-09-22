@@ -9,9 +9,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 # Es por eso que usamos importlib para cargarlos dinámicamente.
 proc = importlib.import_module("01_procesamiento")
 norm = importlib.import_module("02_normalizacion")
-ana = importlib.import_module("03_analisis")
-disc = importlib.import_module("04_discretizacion")
-split = importlib.import_module("05_splitData")
+ana = importlib.import_module("03_analisisCorrelacion")
+#disc = importlib.import_module("04_discretizacion")
+#split = importlib.import_module("05_splitData")
 
 def main():
     print("======================================================")
@@ -31,7 +31,7 @@ def main():
     ana.ejecutar()
     
     # 5. División de los datos limpios en Train, Validation y Test
-    split.ejecutar()
+    #split.ejecutar()
     
     print("\n======================================================")
     print("  PIPELINE COMPLETADO EXITOSAMENTE")

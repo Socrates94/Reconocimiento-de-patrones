@@ -10,6 +10,15 @@ def min_max(X):
     """
     Fórmula Min-Max:
     X_nuevo = (X - X_min) / (X_max - X_min)
+    
+    ¿Cuándo usarlo? 
+    Es ideal cuando se conocen los límites mínimos y máximos fijos (ej. píxeles de 0 a 255) 
+    o cuando los algoritmos requieren que los datos estén estrictamente en un rango como [0, 1] 
+    (ej. Redes Neuronales).
+    
+    Manejo de datos atípicos (outliers):
+    Es MUY sensible a los valores atípicos. Si tienes un outlier gigante, el X_max será enorme, 
+    y esto provocará que todos tus datos "normales" se compriman en un rango pequeñito cercano a 0.
     """
     # Calculamos el mínimo y máximo de cada columna
     X_min = X.min()
@@ -24,6 +33,15 @@ def z_score(X):
     """
     Fórmula Z-Score (StandardScaler):
     X_nuevo = (X - Media) / Desviacion_Estandar
+    
+    ¿Cuándo usarlo?
+    Es la opción "por defecto" para muchos algoritmos como PCA, SVM o KNN. Funciona excelente 
+    si los datos siguen (o se acercan) a una distribución normal (Campana de Gauss). No restringe 
+    los datos a un rango exacto.
+    
+    Manejo de datos atípicos (outliers):
+    Es afectado por los outliers, porque un valor muy extremo va a "jalar" o modificar la Media 
+    y va a inflar la Desviación Estándar. Aún así, es menos catastrófico que el Min-Max.
     """
     # Calculamos el promedio (media) y la desviación estándar de cada columna
     media = X.mean()
@@ -38,6 +56,14 @@ def robust_scaler(X):
     """
     Fórmula RobustScaler:
     X_nuevo = (X - Mediana) / Rango_Intercuartilico(Q3 - Q1)
+    
+    ¿Cuándo usarlo?
+    ¡Es EL MEJOR MÉTODO cuando tu dataset está lleno de DATOS ATÍPICOS (outliers)!
+    
+    Manejo de datos atípicos (outliers):
+    Es inmune (o robusto) a los outliers. Esto se debe a que usa la Mediana en lugar de la Media, 
+    y el Rango Intercuartílico (IQR, que solo mira el 50% central de los datos) en lugar del Min y Max. 
+    Un valor atípico gigante no altera ni la mediana ni el IQR, por lo que tu normalización queda limpia.
     """
     # Calculamos la mediana (el valor justo en el medio, no se afecta por valores atípicos)
     mediana = X.median()
@@ -63,6 +89,15 @@ def decimal_scaling(X):
     Fórmula Decimal Scaling:
     X_nuevo = X / (10^j)
     donde j es la cantidad de veces que se recorre el punto para que el máximo absoluto sea < 1
+    
+    ¿Cuándo usarlo?
+    Sirve cuando simplemente queremos achicar el número moviendo el punto decimal (ej. 450 se vuelve 0.450) 
+    para mantener exactamente los mismos dígitos pero a una escala menor a 1.
+    
+    Manejo de datos atípicos (outliers):
+    También es muy afectado por los outliers. Como el valor 'j' depende del valor absoluto MÁS GRANDE (max_abs), 
+    un solo valor gigante va a hacer que todos los demás valores "normales" ganen muchísimos ceros a la izquierda,
+    perdiendo representatividad numérica.
     """
     # 1. Encontrar el valor absoluto máximo por cada columna
     max_abs = np.abs(X).max()
