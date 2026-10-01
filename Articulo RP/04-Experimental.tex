@@ -1,0 +1,25 @@
+\section{Resultados y Experimentación}
+La ejecución del pipeline demostró reducciones sustanciales en la complejidad de los conjuntos de datos.
+
+\subsection{Impacto del Análisis de Correlación}
+Al someter los datasets al filtro de correlación de Pearson ($|r| > 0.98$):
+\begin{itemize}
+    \item \textbf{Dataset Slice:} Se detectaron 148 pares altamente correlacionados. Al descartar la redundancia, el volumen original de 385 columnas se redujo a 324 características limpias (eliminación de 61 "clones").
+    \item \textbf{Dataset Vh:} De 18 columnas originales, se detectaron 3 pares correlacionados, generando un dataset limpio final de 16 columnas.
+\end{itemize}
+
+\subsection{Rendimiento de PCA}
+La reducción explícita a 10 componentes mediante PCA arrojó los siguientes niveles de varianza retenida:
+\begin{itemize}
+    \item En \textit{Slice}, las 10 componentes lograron conservar el $71.99\%$ de la información original.
+    \item En \textit{Vh}, las 10 componentes consiguieron encapsular el $98.90\%$ de la varianza total, evidenciando una alta redundancia intrínseca en el espacio original.
+\end{itemize}
+
+\subsection{Distribución de Datasets Resultantes}
+Finalmente, la separación en conjuntos estratificados generó archivos listos para el entrenamiento. Para el caso del dataset \textit{Slice\_zscore\_pearson\_limpio}:
+\begin{itemize}
+    \item \textbf{Train (70\%):} 286 muestras.
+    \item \textbf{Validation (15\%):} 61 muestras.
+    \item \textbf{Test (15\%):} 62 muestras.
+\end{itemize}
+La misma distribución se garantizó para todas las variantes (\textit{pearson, pca, cca}) de los datasets procesados.

@@ -8,6 +8,7 @@ El proyecto está organizado en una arquitectura por carpetas para mantener sepa
 
 ```text
 Reconocimiento-de-patrones/
+├── Articulo RP/           # Código fuente LaTeX y PDF del artículo científico final
 ├── data/
 │   ├── 1_raw/             # Datasets originales en formato .txt (ej. Slice.txt, Vh.txt)
 │   ├── 3_transformed/     # Datasets convertidos a CSV y Normalizados
@@ -111,3 +112,9 @@ Coloca tus datasets originales (`Slice.txt`, `Vh.txt`) dentro de la carpeta `dat
 python main.py
 ```
 *Nota: Actualmente el pipeline está configurado específicamente para leer Slice y Vh. Nuevos datasets requieren actualizar los nombres hardcodeados en el código fuente.*
+
+---
+
+## 📄 Artículo Científico (Reporte Final)
+
+El proyecto incluye un reporte final estructurado como un **artículo científico** (estilo *Jornadas Sarteco*). El código fuente en LaTeX, la bibliografía técnica y el PDF compilado (`main.pdf`) se encuentran en el directorio `Articulo RP/`. Visita el `README.md` dentro de esa carpeta para conocer la estructura modular del documento.

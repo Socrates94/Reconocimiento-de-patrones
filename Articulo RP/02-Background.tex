@@ -1,0 +1,19 @@
+\section{Marco Teórico}
+El desarrollo del pipeline fundamenta su arquitectura en técnicas establecidas de la ciencia de datos y el reconocimiento estadístico de patrones \cite{jain2000}.
+
+\subsection{Normalización de Datos}
+La normalización proyecta los datos a un espacio uniforme, evitando que variables con escalas mayores dominen el cálculo de distancias (ej. en clasificadores KNN). Se implementaron los siguientes métodos:
+\begin{itemize}
+    \item \textbf{Min-Max:} Ajusta los datos en un rango de [0,1].
+    \item \textbf{Z-Score (Estandarización):} Centra los datos en una media de 0 y desviación estándar de 1, útil para algoritmos que asumen distribución normal.
+    \item \textbf{Robust Scaler:} Emplea la mediana y el rango intercuartílico, mitigando el impacto de valores atípicos (outliers).
+    \item \textbf{Decimal Scaling:} Escala los datos desplazando el punto decimal según el valor absoluto máximo.
+\end{itemize}
+
+\subsection{Reducción de Dimensionalidad}
+La \textit{Maldición de la Dimensionalidad} provoca que los clasificadores pierdan eficiencia ante un exceso de características. Para mitigarla, se utilizaron tres enfoques:
+\begin{itemize}
+    \item \textbf{Correlación de Pearson:} Mide la dependencia lineal perfecta entre dos variables. Se utiliza para eliminar características redundantes (clones) que comparten un alto coeficiente ($|r| > 0.98$).
+    \item \textbf{Análisis de Componentes Principales (PCA):} Transformación ortogonal que proyecta los datos hacia componentes que maximizan la varianza.
+    \item \textbf{Análisis de Correlación Canónica (CCA):} Busca relaciones lineales que maximizan la correlación entre dos conjuntos de variables (en este caso, características contra etiquetas de clase).
+\end{itemize}
