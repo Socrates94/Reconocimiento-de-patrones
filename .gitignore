@@ -1,0 +1,46 @@
+# Entornos Virtuales de Python
+.venv/
+venv/
+env/
+
+# Archivos compilados y caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IGNORAR DATASETS Y ARCHIVOS PESADOS
+# Ignoramos todo el contenido de la carpeta data
+data/
+*.csv
+*.txt
+
+# Excepciones: Si en el futuro quieres subir un archivo de muestra, descomenta la siguiente línea
+# !data/sample.csv
+
+# Modelos Entrenados (Machine Learning)
+*.pkl
+*.h5
+*.model
+*.joblib
+
+# Archivos de compilación de LaTeX (Para tu carpeta Articulo RP)
+# (Ignora basura que genera LaTeX, pero permite que subas el .tex y el .pdf final)
+*.aux
+*.bbl
+*.blg
+*.brf
+*.idx
+*.ilg
+*.ind
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Archivos del Sistema / IDE
+.DS_Store
+.vscode/
+.idea/

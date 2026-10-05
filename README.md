@@ -1,120 +1,116 @@
-# Pipeline de Reconocimiento de Patrones - Tarea 01
+# 🧬 Proyecto Final: Framework Híbrido SVM-RF para Autenticación Multi-Biométrica
 
-Este proyecto es un pipeline completo de Machine Learning enfocado en el preprocesamiento, normalización, análisis de correlación (PCA/CCA) y preparación de datos para algoritmos de **Reconocimiento de Patrones**.
+Este proyecto implementa un sistema avanzado de **Reconocimiento de Patrones y Visión Artificial**, basado en el artículo científico *"Optimized hybrid SVM-RF multi-biometric framework for enhanced authentication using fingerprint, iris, and face recognition"* (Sonal et al., 2025).
 
-## 📂 Estructura del Proyecto
+El objetivo es construir un pipeline de Machine Learning que procese imágenes biométricas (huellas, rostros e iris), extraiga características mediante Filtros de Gabor, reduzca la dimensionalidad con algoritmos metaheurísticos, y finalmente clasifique utilizando un ensamble híbrido de Máquinas de Vectores de Soporte (SVM) y Bosques Aleatorios (Random Forest).
 
-El proyecto está organizado en una arquitectura por carpetas para mantener separados el código fuente y los datos en sus diferentes etapas de transformación:
+---
+
+## 📂 Estructura Arquitectónica del Proyecto
+
+El proyecto mantiene un diseño modular, separando estrictamente los datos crudos, las transformaciones intermedias y el código fuente. Esta es la estructura objetivo hacia la que evolucionará el código:
 
 ```text
 Reconocimiento-de-patrones/
 ├── Articulo RP/           # Código fuente LaTeX y PDF del artículo científico final
+├── Bibliografia/          # Libros y referencias clave de la materia
 ├── data/
-│   ├── 1_raw/             # Datasets originales en formato .txt (ej. Slice.txt, Vh.txt)
-│   ├── 3_transformed/     # Datasets convertidos a CSV y Normalizados
-│   ├── 4_correlacion/     # Matrices de Pearson y datasets reducidos (PCA/CCA)
-│   └── 5_splits/          # Divisiones finales en Train (70%), Validation (15%), Test (15%)
+│   ├── 1_raw_images/      # Datasets originales (Huellas SOCOFing, Rostros, Iris MMU)
+│   ├── 2_preprocessed/    # Imágenes con filtro de mediana, CLAHE y tamaño 128x128
+│   ├── 3_features/        # Vectores extraídos crudos por los Filtros de Gabor
+│   ├── 4_optimized/       # Características reducidas por Algoritmos Genéticos (GA) y BFO
+│   └── 5_splits/          # División final en Entrenamiento (70%) y Prueba (30%)
 ├── src/
-│   ├── 01_procesamiento.py          # Conversión de TXT a CSV
-│   ├── 02_normalizacion.py          # Normalización (Min-Max, Z-Score, Robust)
-│   ├── 03_analisisCorrelacion.py    # Correlación de Pearson, PCA y CCA
-│   ├── 04_discretizacion.py         # Discretización de variables
-│   ├── 05_splitData.py              # División de conjuntos de datos
-│   └── normalizacion_manual.py      # Implementación matemática manual de normalizadores
-├── venv/                  # Entorno virtual de Python
-├── main.py                # Archivo principal que orquesta todo el pipeline
-├── requirements.txt       # Dependencias del proyecto
+│   ├── 01_image_preprocessing.py   # Limpieza, redimensionamiento y ecualización de imágenes
+│   ├── 02_feature_extraction.py    # Aplicación de bancos de Filtros de Gabor
+│   ├── 03_optimization.py          # Selección de características (BFO y GA)
+│   ├── 04_model_training.py        # Entrenamiento de SVM, RF y el modelo Híbrido
+│   └── 05_evaluation.py            # Matrices de confusión, Curvas ROC y Métricas
+├── venv/                  # Entorno virtual de Python gestionado por 'uv'
+├── main.py                # Orquestador maestro que ejecutará el pipeline completo
+├── requirements.txt       # Dependencias del proyecto (OpenCV, scikit-learn, etc.)
+├── Plan_Semestral_Proyecto_Final.md # Hoja de ruta detallada del semestre
+├── Stack_Tecnologico_Proyecto_Final.md # Detalle de librerías Python a utilizar
 └── README.md              # Este archivo
 ```
 
 ---
 
-## 🚀 Etapas del Pipeline y Explicación de Métodos
+## 📊 Datasets Biomédicos (Fuentes de Datos)
 
-El pipeline se ejecuta secuencialmente a través del archivo `main.py` y consta de las siguientes etapas:
+Este proyecto utiliza tres fuentes de datos biométricos de acceso público para entrenar y evaluar el modelo híbrido. Todas las imágenes deben ser almacenadas en el directorio `data/1_raw_images/`.
 
-### 1. Procesamiento (`01_procesamiento.py`)
-Lee los archivos `.txt` crudos que contienen los datos y los convierte a un formato tabular estándar `.csv` para facilitar su lectura en Pandas.
+### 1. Detección de Rostros (Real and Fake Face Detection)
+*   **Fuente Oficial:** [Kaggle - Real and Fake Face Detection](https://www.kaggle.com/datasets/ciplab/real-and-fake-face-detection)
+*   **Características:** Consiste en una colección de imágenes faciales divididas en rostros reales (fotografías auténticas de personas) y rostros falsificados (creados digitalmente o usando técnicas tipo Deepfake/Photoshop). Es ideal para probar la robustez del sistema contra ataques de suplantación.
+*   **Estructura Interna:** Usualmente el archivo descargado se divide en carpetas que separan a las clases reales y falsas (ej. `training_real` y `training_fake`).
 
-### 2. Normalización (`02_normalizacion.py` y `normalizacion_manual.py`)
-Escala los datos para evitar que características con números grandes dominen el cálculo de distancias matemáticas. Se aplican y comparan varios métodos:
+### 2. Huellas Dactilares (SOCOFing)
+*   **Fuente Oficial:** [Kaggle - SOCOFing Dataset](https://www.kaggle.com/datasets/ruizgara/socofing?resource=download)
+*   **Características:** Sokoto Coventry Fingerprint Dataset (SOCOFing) es una base de datos de investigación que contiene miles de imágenes de huellas dactilares. Su característica más importante es que proporciona huellas reales de alta calidad y luego proporciona versiones "alteradas" o "corruptas" sintéticamente para simular cortes, borrones o distorsiones.
+*   **Estructura Interna:** Encontrarás subcarpetas maestras como `Real` (huellas perfectas) y `Altered` (las huellas con ruido artificial).
 
-*   **Min-Max:** 
-    *   **Fórmula:** `X_nuevo = (X - X_min) / (X_max - X_min)`
-    *   **¿Cuándo usarlo?** Es ideal cuando se conocen los límites fijos (ej. píxeles de 0 a 255) o cuando los algoritmos requieren que los datos estén estrictamente en un rango como `[0, 1]` (ej. Redes Neuronales).
-    *   **Manejo de Outliers:** Es PÉSIMO lidiando con outliers. Un solo dato gigante comprime todos los demás valores "normales" a un rango casi de 0.
-
-*   **Z-Score (StandardScaler):** 
-    *   **Fórmula:** `X_nuevo = (X - Media) / Desviacion_Estandar`
-    *   **¿Cuándo usarlo?** Es la opción "por defecto" para algoritmos como PCA o SVM. Funciona excelente si los datos se agrupan al centro (siguen una distribución normal o Campana de Gauss).
-    *   **Manejo de Outliers:** Le afectan moderadamente. Un outlier moverá la media general y ampliará la desviación estándar, pero es más seguro que Min-Max.
-
-*   **RobustScaler:** 
-    *   **Fórmula:** `X_nuevo = (X - Mediana) / Rango_Intercuartilico`
-    *   **¿Cuándo usarlo?** ¡Es EL MEJOR MÉTODO cuando sabes que tu dataset está lleno de DATOS ATÍPICOS (outliers)!
-    *   **Manejo de Outliers:** Es completamente inmune (robusto) a ellos, ya que usa la Mediana y los Cuartiles centrales que ignoran por completo los valores extremos.
-
-*   **Decimal Scaling (Manual):** 
-    *   **Fórmula:** `X_nuevo = X / (10^j)`
-    *   **¿Cuándo usarlo?** Cuando solo quieres hacer los números más pequeños moviendo el punto decimal, preservando exactamente los mismos dígitos de la estructura original.
-    *   **Manejo de Outliers:** Muy sensible a los outliers, ya que el valor absoluto más grande del dataset es el que dicta cuántas posiciones se mueve el punto decimal para todos los datos.
-
-### 3. Análisis Exploratorio y de Correlación (`03_analisisCorrelacion.py`)
-Analiza la relación entre las características y reduce la dimensionalidad para combatir la "Maldición de la Dimensionalidad":
-
-*   **Correlación de Pearson:** 
-    *   Mide la relación lineal entre dos columnas (de -1 a 1).
-    *   **¿Cuándo usarlo?** Ideal como paso de limpieza para detectar "clones" (características con `r > 0.98`) y borrar uno de ellos, ahorrando procesamiento. Funciona cuando los datos son numéricos y la relación se asume como lineal.
-    *   **¿Cuándo NO usarlo?** Si tus datos son categóricos (texto) o si la relación entre variables es compleja y no-lineal (ej. curva parabólica).
-
-*   **PCA (Análisis de Componentes Principales):** 
-    *   Comprime cientos de columnas en unos pocos "componentes" rescatando la mayor cantidad de varianza posible. Es una técnica **No Supervisada**.
-    *   **¿Cuándo usarlo?** Cuando sufres por tener demasiadas columnas y el modelo es muy lento. *Regla de oro: los datos deben estar previamente normalizados.*
-    *   **¿Cuándo NO usarlo?** Como PCA es "ciego" a las etiquetas a predecir, al comprimir la varianza podría borrar justo la información útil que diferenciaba a tus clases. Tampoco sirve si necesitas explicarle a alguien qué variable original exacta causó una predicción (PCA mezcla todo).
-
-*   **CCA (Análisis de Correlación Canónica):** 
-    *   Transforma las características (X) en componentes que tengan la MÁXIMA correlación con la clase a predecir (Y). Es una técnica **Supervisada**.
-    *   **¿Cuándo usarlo?** Cuando tu prioridad absoluta es que los nuevos componentes mantengan una relación fortísima con las etiquetas de tus clases (muy útil para clasificación).
-    *   **¿Cuándo NO usarlo?** Si tus características (X) tienen multicolinealidad extrema (columnas clonadas redundantes), las matemáticas de CCA "explotan". Por eso es obligatorio aplicar Pearson primero para limpiar clones antes de usar CCA.
-
-### 4. Discretización (`04_discretizacion.py`)
-*(Opcional)* Convierte variables continuas en intervalos discretos o categorías.
-
-### 5. División de Datos / Split (`05_splitData.py`)
-Divide rigurosamente los datasets procesados para Machine Learning:
-*   **Train (70%):** Para enseñar al modelo.
-*   **Validation (15%):** Para ajustar hiperparámetros.
-*   **Test (15%):** Para evaluar el rendimiento final sin sesgos.
+### 3. Patrones de Iris (MMU Iris Database)
+*   **Fuente Oficial:** [Kaggle - MMU Iris Dataset](https://www.kaggle.com/datasets/naureenmohammad/mmu-iris-dataset?utm_source=chatgpt.com)
+*   **Características:** Una colección biométrica capturada mediante cámaras de infrarrojo cercano para iluminar perfectamente el patrón textural del iris de 46 personas distintas. Las imágenes suelen presentar variaciones por la pupila dilatada, anteojos y pestañas.
+*   **Estructura Interna:** Al descomprimirlo, verás docenas de carpetas numeradas (ej. `1`, `2`, ..., `46`). ¡Ojo! Cada número es una persona (o clase) diferente. Y dentro de la carpeta `1`, normalmente encontrarás subcarpetas como `left` (ojo izquierdo) y `right` (ojo derecho).
 
 ---
 
-## ⚙️ Instalación y Ejecución
+## 🚀 Etapas del Pipeline Biomédico (Roadmap)
 
-Para correr este proyecto en tu máquina local:
+A continuación se detalla el flujo de trabajo que implementaremos paso a paso en los módulos de Python:
 
-### 1. Crear y activar el entorno virtual
-```bash
-# Crear entorno virtual
-python3 -m venv venv
+### 1. Preprocesamiento Visual (`01_image_preprocessing.py`)
+Equivalente a la "Normalización" de datos tabulares, pero aplicado a imágenes:
+*   **Filtro de Mediana (3x3):** Para eliminar ruido del sensor (Salt-and-Pepper).
+*   **Redimensionamiento:** Interpolación bilineal para dejar todas las imágenes en una matriz estándar de `128x128`.
+*   **CLAHE (Contrast Enhancement):** Ecualización de histograma adaptativa para resaltar crestas de huellas y texturas del iris sin quemar la imagen.
 
-# Activar entorno (Linux/Mac)
-source venv/bin/activate
-```
+### 2. Extracción de Características (`02_feature_extraction.py`)
+Las imágenes no se pueden clasificar en bruto. Usaremos **Filtros de Gabor** para analizar el dominio espacial y de frecuencias, capturando las texturas matemáticas únicas de cada rasgo biométrico.
 
-### 2. Instalar dependencias
-```bash
-pip install -r requirements.txt
-```
+### 3. Optimización de Dimensiones (`03_optimization.py`)
+Para evitar la maldición de la dimensionalidad provocada por los vectores masivos de Gabor, usaremos selección natural:
+*   **GA (Genetic Algorithms):** Selección global de características basada en evolución.
+*   **BFO (Bacterial Foraging Optimization):** Búsqueda local de las mejores combinaciones de características.
 
-### 3. Ejecutar el Pipeline
-Coloca tus datasets originales (`Slice.txt`, `Vh.txt`) dentro de la carpeta `data/1_raw/` y luego ejecuta el orquestador:
-```bash
-python main.py
-```
-*Nota: Actualmente el pipeline está configurado específicamente para leer Slice y Vh. Nuevos datasets requieren actualizar los nombres hardcodeados en el código fuente.*
+### 4. Clasificación Híbrida (`04_model_training.py`)
+*   Se divide el dataset limpio y optimizado en **70% Train** y **30% Test**.
+*   Se construye un modelo conjunto (Ensemble) que toma la velocidad y precisión para trazar fronteras lineales del **SVM** y la resistencia contra el ruido del **Random Forest (RF)**.
+*   > 💡 **Nota de Rendimiento (Hardware):** Para aprovechar al máximo arquitecturas multi-núcleo (como procesadores Ryzen 9 de 24 núcleos), forzaremos el multiprocesamiento en Scikit-Learn. A los clasificadores que lo soporten se les añadirá el parámetro `n_jobs=-1` para utilizar el 100% del procesador.
+    Ejemplo:
+    ```python
+    bosque = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+    ```
+
+### 5. Evaluación Científica (`05_evaluation.py`)
+Validación estricta de resultados para el reporte final de la materia, calculando:
+*   Accuracy (Exactitud esperada ~97%)
+*   Precision, Recall, F1-Score y Especificidad.
+*   Gráficas de la Curva ROC (AUC).
 
 ---
 
-## 📄 Artículo Científico (Reporte Final)
+## ⚙️ Preparación Inicial
 
-El proyecto incluye un reporte final estructurado como un **artículo científico** (estilo *Jornadas Sarteco*). El código fuente en LaTeX, la bibliografía técnica y el PDF compilado (`main.pdf`) se encuentran en el directorio `Articulo RP/`. Visita el `README.md` dentro de esa carpeta para conocer la estructura modular del documento.
+Actualmente el proyecto está en etapa de refactorización hacia este nuevo paradigma. Para preparar tu entorno, asegúrate de utilizar `uv`:
+
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install opencv-python numpy scikit-learn scikit-image matplotlib seaborn pygad mealpy
+```
+
+*Nota: El código fuente en `src/` será reescrito iterativamente para cumplir con este nuevo pipeline.*
+
+---
+
+## 🔮 Visión a Futuro: Descentralización Biométrica (Tesis de Maestría)
+
+Como propuesta de innovación y puente directo hacia la Tesis de Maestría, la arquitectura de este framework biométrico se proyectará en el artículo científico (sección *Future Work*) hacia la **Identidad Auto-Soberana (SSI)**.
+
+Aunque el modelo SVM-RF garantiza alta precisión, las bases de datos biométricas centralizadas representan un riesgo de seguridad crítico (*Honeypots*). Por ende, el trabajo a futuro establecerá que:
+1. El **embedding matemático** (los vectores de características extraídos y optimizados por esta IA) NO se almacene en un servidor.
+2. Sea emitido como una **Credencial Verificable** directamente a la billetera móvil del usuario mediante una DLT (**Hyperledger Indy**).
+3. La validación matemática de identidad se resuelva en el borde sin revelar el biométrico real, mediante **Pruebas de Conocimiento Cero (ZKP)**.
