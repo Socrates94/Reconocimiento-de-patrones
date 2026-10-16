@@ -1,19 +1,61 @@
-\section{Marco Teórico}
-El desarrollo del pipeline fundamenta su arquitectura en técnicas establecidas de la ciencia de datos y el reconocimiento estadístico de patrones \cite{jain2000}.
+\section{Marco Teórico}\label{sec:background}
 
-\subsection{Normalización de Datos}
-La normalización proyecta los datos a un espacio uniforme, evitando que variables con escalas mayores dominen el cálculo de distancias (ej. en clasificadores KNN). Se implementaron los siguientes métodos:
-\begin{itemize}
-    \item \textbf{Min-Max:} Ajusta los datos en un rango de [0,1].
-    \item \textbf{Z-Score (Estandarización):} Centra los datos en una media de 0 y desviación estándar de 1, útil para algoritmos que asumen distribución normal.
-    \item \textbf{Robust Scaler:} Emplea la mediana y el rango intercuartílico, mitigando el impacto de valores atípicos (outliers).
-    \item \textbf{Decimal Scaling:} Escala los datos desplazando el punto decimal según el valor absoluto máximo.
-\end{itemize}
+El fundamento científico del framework propuesto reposa en la articulación sinérgica del preprocesamiento radiométrico, la descomposición armónica en el dominio frecuencial, la optimización metaheurística bioinspirada y el aprendizaje supervisado en ensamble.
 
-\subsection{Reducción de Dimensionalidad}
-La \textit{Maldición de la Dimensionalidad} provoca que los clasificadores pierdan eficiencia ante un exceso de características. Para mitigarla, se utilizaron tres enfoques:
-\begin{itemize}
-    \item \textbf{Correlación de Pearson:} Mide la dependencia lineal perfecta entre dos variables. Se utiliza para eliminar características redundantes (clones) que comparten un alto coeficiente ($|r| > 0.98$).
-    \item \textbf{Análisis de Componentes Principales (PCA):} Transformación ortogonal que proyecta los datos hacia componentes que maximizan la varianza.
-    \item \textbf{Análisis de Correlación Canónica (CCA):} Busca relaciones lineales que maximizan la correlación entre dos conjuntos de variables (en este caso, características contra etiquetas de clase).
-\end{itemize}
+\subsection{Filtrado Espacial y Ecualización Adaptativa (CLAHE)}
+La normalización de la señal óptica capturada por los sensores resulta imprescindible para eliminar artefactos espurios sin degradar las estructuras topológicas de interés (minucias, surcos papilares o estrías del iris).
+
+El \textbf{Filtro de Mediana} es un operador no lineal de ordenamiento local. Para un píxel en coordenadas $(i,j)$ contenido en una vecindad espacial discreta $W$, el valor de salida viene definido por:
+\begin{equation}
+y[i,j] = \mathrm{mediana}\left(\{x[k,l] \mid (k,l) \in W(i,j)\}\right)
+\end{equation}
+A diferencia de los filtros lineales basados en convolución Gaussiana, el filtro de mediana exhibe una respuesta óptima frente al ruido impulsional (sal y pimienta), preservando las discontinuidades de borde sin inducir desenfoque perjudicial en las frecuencias altas.
+
+Posteriormente, la técnica \textbf{CLAHE} (\textit{Contrast Limited Adaptive Histogram Equalization}) fragmenta la imagen en bloques contextuales bidimensionales e incrementa el contraste local redistribuyendo las intensidades luminosas \cite{fieguth2022}. Para prevenir la amplificación desmedida del ruido en regiones relativamente homogéneas, CLAHE acota la pendiente de la función de distribución acumulada mediante un umbral de recorte (\textit{clip limit}), redistribuyendo el exceso de conteo uniformemente entre los demás niveles de gris antes de calcular la función de mapeo.
+
+\subsection{Bancos de Filtros de Gabor para Extracción Textural}
+Los filtros lineales de Gabor son kernels sinusoidales armónicos modulados por una envolvente Gaussiana bivariada, concebidos para modelar matemáticamente los campos receptivos de las neuronas de la corteza visual primaria humana \cite{duda2000}. La respuesta bidimensional del filtro en el dominio espacial se expresa analíticamente como:
+\begin{equation}
+\begin{aligned}
+g(x,y;\lambda,\theta,\psi,\sigma,\gamma) = {} & \exp\left(-\frac{x'^2 + \gamma^2 y'^2}{2\sigma^2}\right) \\
+& \times \cos\left(2\pi \frac{x'}{\lambda} + \psi\right)
+\end{aligned}
+\end{equation}
+donde las coordenadas rotadas respecto a la orientación espacial $\theta$ satisfacen:
+\begin{align}
+x' &= x\cos\theta + y\sin\theta \\
+y' &= -x\sin\theta + y\cos\theta
+\end{align}
+En estas ecuaciones, $\lambda$ representa la longitud de onda de la componente sinusoidal, $\psi$ define el desfase de fase, $\sigma$ fija la varianza o escala de la envolvente Gaussiana, y $\gamma$ es la relación de aspecto espacial que determina la elipticidad del filtro. 
+
+Al aplicar un banco de filtros discretizado en múltiples orientaciones angulares ($\theta \in \{0^\circ, 45^\circ, 90^\circ, 135^\circ\}$), se obtiene una caracterización simultánea de la textura tanto en el dominio espacial como en el frecuencial. Para condensar la respuesta de la convolución matricial sin incurrir en redundancia espacial, se computan descriptores estadísticos compactos (media y varianza) sobre cada mapa de coeficientes.
+
+\subsection{Optimización Metaheurística: Algoritmos Genéticos y BFO}
+La concatenación multiorientación y multimodal genera vectores de características de dimensionalidad elevada, lo cual desencadena la denominada ``maldición de la dimensionalidad'' (\textit{curse of dimensionality}), colinealidad estadística y sobreajuste \cite{bishop2006}. Para aislar el subconjunto de rasgos con máxima capacidad discriminante, se acoplan dos estrategias metaheurísticas:
+
+\begin{enumerate}
+    \item \textbf{Algoritmos Genéticos (GA):} Realizan una exploración estocástica global en un espacio combinatorio binario de dimensión $D$. Mediante operadores de selección por torneo, cruzamiento monopunto/uniforme y mutaciones aleatorias, GA preserva y recombina aquellos alelos (características) que incrementan la aptitud (\textit{fitness}) del sistema.
+    \item \textbf{Bacterial Foraging Optimization (BFO):} Algoritmo inspirado en el comportamiento quimiotáctico de la bacteria \textit{Escherichia coli}. Modela procesos locales de quimiotaxis (ciclos alternados de nado continuo y voltereta angular), enjambrazón cooperativa, reproducción selectiva y dispersión aleatoria. BFO actúa como un refinador local, impidiendo que la búsqueda quede atrapada en óptimos locales poco profundos \cite{sonal2025}.
+\end{enumerate}
+
+La función de aptitud multiobjetivo evalúa simultáneamente el desempeño predictivo y la compacidad del vector de entrada:
+\begin{equation}
+\mathrm{Fitness}(\mathbf{v}) = w_1 \cdot \mathrm{Acc}(\mathbf{v}) + w_2 \left(1 - \frac{\sum_{i=1}^D v_i}{D}\right)
+\end{equation}
+donde $v_i \in \{0, 1\}$ denota la selección del rasgo $i$, $\mathrm{Acc}(\mathbf{v})$ es la exactitud de clasificación y $w_1, w_2$ son constantes de ponderación normalizadas ($w_1 + w_2 = 1$).
+
+\subsection{Clasificación Híbrida SVM-RF}
+El núcleo predictivo del framework descansa en la integración complementaria de dos paradigmas de aprendizaje supervisado:
+
+\textbf{Support Vector Machine (SVM):} Modela la frontera de decisión determinando el hiperplano óptimo $\mathbf{w}^T \mathbf{x} + b = 0$ que maximiza el margen geométrico entre clases contiguas. En espacios optimizados de alta dimensionalidad, el kernel lineal reduce la complejidad computacional y previene la dispersión del margen de separación \cite{duda2000}.
+
+\textbf{Random Forest (RF):} Constituye un ensamble de múltiples árboles de decisión estocásticos independientes entrenados mediante \textit{bagging} (muestreo con reemplazo) y selección aleatoria de subespacios de atributos. La votación agregada promedia las salidas individuales, reduciendo drásticamente la varianza del estimador y amortiguando el impacto del ruido residual.
+
+\textbf{Ensamble Híbrido mediante Votación Suave (\textit{Soft Voting}):} En lugar de basarse en asignaciones discretas rígidas, el modelo híbrido pondera las distribuciones de probabilidad a posteriori de ambos clasificadores:
+\begin{equation}
+\begin{aligned}
+P_{\text{híb}}(y = c \mid \mathbf{x}) = {} & \frac{1}{2} \big[ P_{\text{SVM}}(y = c \mid \mathbf{x}) \\
+& + P_{\text{RF}}(y = c \mid \mathbf{x}) \big]
+\end{aligned}
+\end{equation}
+donde las probabilidades del SVM se obtienen mediante el ajuste sigmoidal de Platt, y las de RF a partir de las proporciones relativas de hojas en los árboles de decisión. Esta estrategia mitiga la incertidumbre y estabiliza el vector de decisión final.

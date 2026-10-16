@@ -1,9 +1,7 @@
-%%%%% Fichero de ejemplo LaTeX que ilustra el uso de la Hoja de Estilo %%%%%%
-%%%%% Jornadas.cls para Jornadas Sarteco
-
+%%%%% Fichero LaTeX: Hoja de Estilo Jornadas.cls %%%%%%
 \documentclass[twocolumn,twoside]{Jornadas}
 \usepackage[utf8]{inputenc}
-\usepackage[spanish]{babel}
+\usepackage[spanish,es-tabla]{babel}
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algorithmicx}
@@ -14,11 +12,11 @@
 \usepackage{caption}
 \captionsetup{font=footnotesize}
 \usepackage[caption=false,font=footnotesize]{subfig}
-%\setlength{\marginparwidth}{2cm}
-%\usepackage{todonotes}
 \usepackage{placeins}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
 
 % -*- Ajustes LaTeX en relación a las figuras -*-
 \setcounter{topnumber}{10}     % Max. numero de figs. on top
@@ -37,7 +35,6 @@
      inputencoding=utf8,
      extendedchars=true,
      backgroundcolor=\color{gray97},
-     %
      stringstyle=\ttfamily,
      showstringspaces = false,
      basicstyle=\scriptsize\ttfamily,
@@ -51,67 +48,54 @@
      numberstyle=\tiny,
      numberfirstline = false,
      firstnumber=auto,
-     breaklines=true,
-     %
      escapeinside={(*@}{@*)},
      literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
-   }
+}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \newtheorem{theorem}{Teorema}
 
-\hyphenation{pa-ra-le-lis-mo pro-cee-dings}
+\hyphenation{bio-me-tri-co ca-rac-te-ris-ti-cas heu-ris-ti-ca cla-si-fi-ca-cion pa-ra-le-lis-mo}
 
-%Directorios en los que se buscan las figuras
+% Directorio de figuras
 \graphicspath{{.}{./Figuras/}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
-\title{Pipeline de Preprocesamiento y Extracción de Características para Reconocimiento de Patrones}
+\title{Desarrollo e Implementación en Python de un Framework Multi-Biométrico Híbrido SVM-RF Optimizado para Autenticación de Personas Mediante Reconocimiento de Rostro, Iris y Huella Dactilar}
 
 \author{%
      José Daniel Flores Morales%
-     \thanks{Benemérita Universidad Autónoma de Puebla, Facultad de Ciencias de la Computación.}
+     \thanks{Maestría en Sistemas Distribuidos, Facultad de Ciencias de la Computación, Benemérita Universidad Autónoma de Puebla (BUAP), Puebla, México. Repositorio de código disponible en: \url{https://github.com/Socrates94/Reconocimiento-de-patrones}}
 }
 
 \maketitle
-% Oculta las cabeceras y los números de página.
-% Ambos elementos se añadirán durante la edición de las actas completas.
 \markboth{}{}
 \pagestyle{empty} 
-\thispagestyle{empty} % Oculta el número de la primera página
+\thispagestyle{empty}
 
 \begin{abstract}
-Este artículo presenta el diseño y desarrollo de un pipeline integral para el preprocesamiento de datos en tareas de reconocimiento de patrones. El flujo de trabajo abarca la conversión de datos crudos, múltiples técnicas de normalización (Min-Max, Z-Score, Robust Scaler y Decimal Scaling), y la extracción de características mediante la correlación de Pearson, Análisis de Componentes Principales (PCA) y Análisis de Correlación Canónica (CCA). Finalmente, se implementó una estrategia de partición estratificada de los datos (Train, Validation, Test) para garantizar la robustez en la fase posterior de entrenamiento de modelos predictivos.
+Los sistemas biométricos unimodales presentan limitaciones operativas significativas, tales como el ruido en los sensores, la falta de singularidad y las elevadas tasas de error. Para superar estas barreras, este trabajo presenta un framework de autenticación multi-biométrica que integra características de huella dactilar, iris y rostro a través de un pipeline modular implementado íntegramente en Python. La metodología aplica filtrado de mediana espacial y ecualización adaptativa de histograma (CLAHE) para la normalización de imágenes, seguido de bancos de filtros de Gabor para la extracción precisa de características. La selección óptima de estos vectores se ejecuta mediante Algoritmos Genéticos (GA) y optimización por forrajeo de bacterias (BFO). La clasificación final emplea un ensamble híbrido donde una Máquina de Vectores de Soporte (SVM) traza los límites de decisión y un Bosque Aleatorio (RF) consolida la predicción para mitigar el sobreajuste. La evaluación experimental demuestra que el modelo híbrido SVM-RF propuesto alcanza una exactitud del 97.56\%, superando drásticamente el rendimiento individual del SVM (54.52\%) y del RF (66.00\%).
 \end{abstract}
 
 \begin{keywords}
-Reconocimiento de Patrones, Normalización, PCA, CCA, Correlación de Pearson, Preprocesamiento.
+Reconocimiento de patrones, Multi-biometría, SVM, Random Forest, Filtros de Gabor, Algoritmos Genéticos, BFO, Visión por Computadora.
 \end{keywords}
 
-%Añade los ficheros que necesites:
-
+% Ficheros de contenido modular
 \input{01-Intro.tex}
 \input{02-Background.tex}
 \input{03-Method.tex}
 \input{04-Experimental.tex}
 \input{05-Conclusions.tex}
 
-
 \section*{Agradecimientos}
+El autor agradece a la Facultad de Ciencias de la Computación de la Benemérita Universidad Autónoma de Puebla (BUAP) y al Consejo Nacional de Humanidades, Ciencias y Tecnologías (CONAHCYT) por el respaldo institucional y académico otorgado para la realización de esta investigación en el marco del programa de Maestría en Sistemas Distribuidos.
 
-Añadir en esta sección no numerada los posibles agradecimientos a proyectos,
-instituciones o personas. Por ejemplo: El presente trabajo ha sido financiado
-mediante  el proyecto xxxx-xxxxx-xxx. 
-
-%Comenta la línea \nocite para que sólo se incluyan en las referencias
-%las entradas que esté referenciadas en el texto con \cite{}
 \nocite{*}
 \bibliographystyle{Jornadas}
 \bibliography{biblio}
 
 \end{document}
-

@@ -1,19 +1,39 @@
-\section{Metodología}
-La arquitectura del proyecto se diseñó modularmente mediante un orquestador \texttt{main.py} que ejecuta secuencialmente las cuatro etapas.
+\section{Materiales y Métodos}\label{sec:method}
 
-\subsection{Etapa 1: Preprocesamiento}
-Los conjuntos de datos \textit{Slice.txt} y \textit{Vh.txt} fueron convertidos a un formato estandarizado \texttt{.csv} (\textit{Comma Separated Values}) para facilitar la carga vectorial mediante la biblioteca Pandas.
+La metodología desarrollada establece un flujo sistemático, determinista y completamente reproducible para la adquisición, acondicionamiento, modelado y validación de las modalidades biométricas consideradas.
 
-\subsection{Etapa 2: Normalización}
-La normalización se aplicó a las matrices de características de ambos datasets, generando tres versiones transformadas por archivo: \textit{Min-Max}, \textit{Z-Score} y \textit{Robust}. Posteriormente, se seleccionó empíricamente la versión Z-Score como línea base para la reducción de dimensionalidad por su eficacia en evitar sesgos de escala.
+\subsection{Datasets Biométricos}
+El estudio se apoya en tres corpus públicos ampliamente reconocidos en la comunidad de visión computacional y seguridad biométrica:
 
-\subsection{Etapa 3: Análisis y Reducción}
-A partir del dataset estandarizado con Z-Score, se ejecutaron tres procesos paralelos de reducción:
+\begin{itemize}
+    \item \textbf{Huella Dactilar (SOCOFing - Sokoto Coventry Fingerprint Dataset):} Compuesto por capturas dactilares de alta calidad que incorporan transformaciones sintéticas realistas (obliteraciones parciales, distorsiones geométricas y ruido térmico), emulando condiciones adversas de escaneo físico.
+    \item \textbf{Rostros (Dataset de Rostros Reales y Falsificados):} Colección de imágenes faciales etiquetadas rigurosamente para tareas de autenticación biométrica y discriminación contra ataques de presentación (\textit{spoofing}).
+    \item \textbf{Iris (MMU Iris Dataset):} Adquisiciones en el espectro infrarrojo cercano (NIR) de los patrones estromales del iris provenientes de múltiples sujetos (capturas separadas para ojos izquierdo y derecho), caracterizadas por complejas texturas radiales y concéntricas.
+\end{itemize}
+
+\subsection{Arquitectura del Pipeline Modular en Python}
+La solución técnica fue desarrollada siguiendo patrones de modularidad e ingeniería de software distribuida. El pipeline está coordinado centralmente por \texttt{main.py}, opera dentro de un entorno virtual aislado administrado por \texttt{uv} bajo el intérprete \textbf{Python 3.12}, y explota el paralelismo a nivel de hardware (\texttt{n\_jobs=-1}) en arquitecturas de CPU multinúcleo.
+
+El flujo de procesamiento se desacopla en cinco etapas secuenciales formalizadas en el paquete \texttt{src/}:
 \begin{enumerate}
-    \item \textbf{Selección de Características:} Se calculó la matriz de covarianza usando la correlación de Pearson. Recorriendo la matriz triangular superior, se identificaron y eliminaron aquellas características con una correlación $|r| > 0.98$.
-    \item \textbf{Proyección PCA:} Se aplicó PCA para reducir el conjunto a 10 componentes principales, registrando el porcentaje de varianza conservada.
-    \item \textbf{Transformación CCA:} Se aplicó CCA para maximizar la correlación entre las características continuas y las etiquetas discretas.
+    \item \texttt{01\_image\_preprocessing.py}: Estandarización de resolución espacial, reducción de ruido y ecualización de histograma.
+    \item \texttt{02\_feature\_extraction.py}: Convolución espacial-frecuencial mediante bancos de filtros de Gabor y compresión estadística.
+    \item \texttt{03\_optimization.py}: Selección metaheurística combinada de atributos (GA + BFO) para reducción dimensional.
+    \item \texttt{04\_model\_training.py}: Partición estratificada y calibración del ensamble híbrido SVM-RF.
+    \item \texttt{05\_evaluation.py}: Inferencia ciega, cálculo de métricas de desempeño, construcción de matrices de confusión y curvas ROC-AUC.
 \end{enumerate}
 
-\subsection{Etapa 4: División de Datos}
-Para prevenir la filtración de datos (\textit{Data Leakage}) durante el futuro entrenamiento, los datos reducidos se partieron utilizando un muestreo estratificado (\texttt{stratify=y}) para preservar la distribución de clases original. La división fue: $70\%$ Entrenamiento (\textit{Train}), $15\%$ Validación (\textit{Validation}) y $15\%$ Prueba (\textit{Test}).
+\subsection{Preprocesamiento Imagenológico}
+Para anular disparidades geométricas originadas por sensores heterogéneos, todas las imágenes de entrada se redimensionan estrictamente a una matriz cuadrada de $128 \times 128$ píxeles mediante interpolación bilineal continua. 
+
+Posteriormente, se introduce un filtro de mediana espacial con máscara convolucional de $3 \times 3$ píxeles, logrando filtrar perturbaciones de alta frecuencia sin degradar crestas dactilares ni bordes pupilares. Acto seguido, se aplica ecualización adaptativa CLAHE con un umbral de recorte \texttt{clipLimit = 2.0} sobre celdas contextuales de $8 \times 8$ píxeles. Esta parametrización normaliza las condiciones de iluminación relativa y potencia el contraste de micro-patrones locales, evitando la sobre-exposición en regiones con bajo gradiente textural.
+
+\subsection{Extracción de Características y Optimización Metaheurística}
+La fase de extracción textural somete las matrices preprocesadas a un banco compuesto por filtros de Gabor orientados a $0^\circ, 45^\circ, 90^\circ$ y $135^\circ$, cubriendo los componentes armónicos fundamentales. De cada plano convolucionado resultante se extraen la media aritmética y la varianza espectral, serializando el perfil de cada individuo en matrices binarias de NumPy (\texttt{.npy}) de acceso eficiente.
+
+Con el fin de erradicar información redundante y colinealidades en el espacio de características, se implementa una fase de optimización evolutiva híbrida. Se utiliza un Algoritmo Genético (GA) mediante las librerías \texttt{PyGAD} y \texttt{DEAP} para liderar la exploración global estocástica, en mancuerna con el algoritmo \textit{Bacterial Foraging Optimization} (BFO), implementado a través de \texttt{Mealpy}. Esta combinación asegura una rigurosa convergencia local, evitando el estancamiento en mínimos locales y descartando características ruidosas que perjudican el límite de decisión.
+
+\subsection{Clasificación Híbrida SVM-RF y Protocolo de Partición}
+Las matrices optimizadas resultantes se someten a una partición estratificada estricta compuesta por un $70\%$ de datos para la fase de entrenamiento y un $30\%$ reservado como conjunto ciego de prueba (\textit{test set}), preservando la proporción original de clases.
+
+El vector de características seleccionado alimenta en primera instancia al clasificador SVM con kernel lineal, el cual calcula el hiperplano óptimo de máxima separación geométrica en el espacio multidimensional. De forma paralela y complementaria, un ensamble \textit{Random Forest} compuesto por 100 estimadores (\texttt{RandomForestClassifier(n\_estimators=100)}) procesa estas representaciones, mapeando dependencias no lineales y mitigando la varianza mediante agregación de decisiones. La consolidación de ambos modelos se materializa mediante un \texttt{VotingClassifier} configurado con votación suave (\textit{soft voting}), asegurando que la predicción final refleje el consenso probabilístico de los estimadores base.

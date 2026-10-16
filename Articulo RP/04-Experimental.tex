@@ -1,25 +1,66 @@
-\section{Resultados y Experimentación}
-La ejecución del pipeline demostró reducciones sustanciales en la complejidad de los conjuntos de datos.
+\section{Resultados y Discusión}\label{sec:experimental}
 
-\subsection{Impacto del Análisis de Correlación}
-Al someter los datasets al filtro de correlación de Pearson ($|r| > 0.98$):
-\begin{itemize}
-    \item \textbf{Dataset Slice:} Se detectaron 148 pares altamente correlacionados. Al descartar la redundancia, el volumen original de 385 columnas se redujo a 324 características limpias (eliminación de 61 "clones").
-    \item \textbf{Dataset Vh:} De 18 columnas originales, se detectaron 3 pares correlacionados, generando un dataset limpio final de 16 columnas.
-\end{itemize}
+La evaluación experimental del framework híbrido multi-biométrico se llevó a cabo aplicando el protocolo de validación ciega sobre el $30\%$ de los datos no observados durante el entrenamiento.
 
-\subsection{Rendimiento de PCA}
-La reducción explícita a 10 componentes mediante PCA arrojó los siguientes niveles de varianza retenida:
-\begin{itemize}
-    \item En \textit{Slice}, las 10 componentes lograron conservar el $71.99\%$ de la información original.
-    \item En \textit{Vh}, las 10 componentes consiguieron encapsular el $98.90\%$ de la varianza total, evidenciando una alta redundancia intrínseca en el espacio original.
-\end{itemize}
+\subsection{Resultados Comparativos}
+El sistema multi-biométrico propuesto exhibió un rendimiento sobresaliente en comparación directa con las aproximaciones unimodales y los clasificadores individuales. El modelo híbrido SVM-RF alcanzó una exactitud predictiva global del \textbf{97.56\%} y un Área Bajo la Curva ROC (\textbf{AUC}) de \textbf{0.94}.
 
-\subsection{Distribución de Datasets Resultantes}
-Finalmente, la separación en conjuntos estratificados generó archivos listos para el entrenamiento. Para el caso del dataset \textit{Slice\_zscore\_pearson\_limpio}:
-\begin{itemize}
-    \item \textbf{Train (70\%):} 286 muestras.
-    \item \textbf{Validation (15\%):} 61 muestras.
-    \item \textbf{Test (15\%):} 62 muestras.
-\end{itemize}
-La misma distribución se garantizó para todas las variantes (\textit{pearson, pca, cca}) de los datasets procesados.
+En el Cuadro \ref{tab:model_comparison} se sintetizan los resultados de desempeño analítico obtenidos al contrastar el modelo híbrido frente a las arquitecturas SVM y Random Forest implementadas de manera aislada.
+
+\begin{table}[h]
+\centering
+\caption{Comparativa de Rendimiento por Modelo (Dataset Multi-biométrico Combinado).}
+\label{tab:model_comparison}
+\begin{adjustbox}{width=\columnwidth}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Modelo de Clasificación} & \textbf{Exactitud (Accuracy)} & \textbf{Pérdida (Loss)} & \textbf{Precisión (Precision)} \\
+\midrule
+SVM (Kernel Lineal) & 54.52\% & 0.49 & 65.35\% \\
+Random Forest (RF) & 66.00\% & 0.61 & 67.45\% \\
+\textbf{Híbrido SVM-RF (Propuesto)} & \textbf{97.56\%} & \textbf{0.02} & \textbf{98.89\%} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\vspace{0.2em}
+{\footnotesize \textit{Nota:} Los datos reflejan una Especificidad (\textit{Specificity}) del \textbf{97.92\%} y un AUC de \textbf{0.94} para el modelo híbrido propuesto.}
+\end{table}
+
+Como se observa en el Cuadro \ref{tab:model_comparison}, los clasificadores individuales SVM (54.52\%) y RF (66.00\%) son insuficientes por sí solos para discriminar adecuadamente en el espacio multidimensional complejo. Sin embargo, su fusión ensamble eleva la exactitud al 97.56\%, logrando una reducción drástica de la función de pérdida hasta 0.02 y alcanzando una precisión del 98.89\%.
+
+\subsection{Análisis Visual de Desempeño}
+Para profundizar en el comportamiento analítico del modelo, se generaron tres representaciones gráficas clave:
+
+\textbf{1. Convergencia del Entrenamiento (Gráfico de Épocas):} En la Figura \ref{fig:epocas} se presenta la evolución dinámica de la exactitud y la pérdida a lo largo de 100 épocas de optimización. La exactitud asciende progresivamente hasta estabilizarse en el 97.56\%, mientras que la función de coste decae exponencialmente hasta el umbral de 0.02, confirmando una convergencia suave exenta de oscilaciones patológicas de sobreajuste.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\columnwidth]{grafico_epocas.png}
+\caption{Evolución del entrenamiento a lo largo de 100 épocas: convergencia de la exactitud (97.56\%) y declive de la pérdida (0.02).}
+\label{fig:epocas}
+\end{figure}
+
+\textbf{2. Matriz de Confusión:} La Figura \ref{fig:confusion} desglosa la matriz de confusión obtenida sobre el conjunto de prueba ciego ($N = 699$ muestras). El modelo registró 446 Verdaderos Positivos (TP) y 236 Verdaderos Negativos (TN), frente a únicamente 5 Falsos Positivos (FP) y 12 Falsos Negativos (FN). Este comportamiento ratifica una tasa de falsa aceptación mínima ($0.71\%$) y respalda la especificidad del 97.92\%.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\columnwidth]{matriz_confusion.png}
+\caption{Matriz de confusión del modelo híbrido SVM-RF sobre el conjunto de test ($N=699$), evidenciando el mínimo margen de error.}
+\label{fig:confusion}
+\end{figure}
+
+\textbf{3. Curvas ROC-AUC:} La Figura \ref{fig:roc} ilustra la comparativa de las curvas \textit{Receiver Operating Characteristic} (ROC). El modelo híbrido SVM-RF alcanza un $\mathrm{AUC} = 0.94$, distanciándose contundentemente del desempeño individual del SVM ($\mathrm{AUC} = 0.68$) y del Random Forest ($\mathrm{AUC} = 0.69$). Esta amplia área demuestra que la frontera de votación suave conserva una alta sensibilidad manteniendo una tasa insignificante de falsas alarmas.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\columnwidth]{curvas_roc.png}
+\caption{Comparativa de curvas ROC-AUC: capacidad discriminativa del modelo híbrido ($\mathrm{AUC} = 0.94$) frente a SVM ($\mathrm{AUC} = 0.68$) y RF ($\mathrm{AUC} = 0.69$).}
+\label{fig:roc}
+\end{figure}
+
+\subsection{Discusión Científica}
+La integración de las modalidades anatómicas de rostro, iris y huella dactilar mediante el algoritmo híbrido SVM-RF consolida una arquitectura de autenticación que minimiza las vulnerabilidades intrínsecas del muestreo unimodal.
+
+La superioridad del modelo propuesto radica en que fusiona eficazmente la precisión del SVM para gestionar fronteras de decisión con la capacidad intrínseca del Random Forest para mitigar el ruido y la imprecisión en los datos subyacentes. Al aplicar el esquema de optimización heurística (GA y BFO) sobre los mapas de textura generados por los filtros de Gabor, el sistema garantiza que solo se retenga la información estadísticamente relevante para clasificar al individuo, reduciendo la pérdida general del ensamble a 0.02.
+
+No obstante, persisten ciertas limitaciones computacionales. La integración concurrente de clasificadores múltiples y optimizadores genéticos incrementa de forma notable las exigencias de tiempo y cómputo en la fase de entrenamiento. En su configuración actual sobre CPU, esto impone un desafío para su re-entrenamiento continuo o despliegue adaptativo en tiempo real sin soporte de aceleración por hardware especializado (e.g. GPUs dedicadas o aceleradores TPU).

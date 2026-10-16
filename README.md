@@ -92,17 +92,32 @@ Validación estricta de resultados para el reporte final de la materia, calculan
 
 ---
 
-## ⚙️ Preparación Inicial
+## ⚙️ Configuración y Ejecución del Proyecto
 
-Actualmente el proyecto está en etapa de refactorización hacia este nuevo paradigma. Para preparar tu entorno, asegúrate de utilizar `uv`:
+El framework está diseñado para ejecutarse secuencialmente, respetando el ciclo de vida de los datos (desde las imágenes en crudo hasta la evaluación final).
+
+### 1. Preparación del Entorno
+Utiliza `uv` (el gestor ultrarrápido de paquetes en Rust) para aislar las dependencias de forma segura:
 
 ```bash
 uv venv
 source .venv/bin/activate
-uv pip install opencv-python numpy scikit-learn scikit-image matplotlib seaborn pygad mealpy
+uv pip install -r requirements.txt
 ```
 
-*Nota: El código fuente en `src/` será reescrito iterativamente para cumplir con este nuevo pipeline.*
+### 2. Ejecución del Pipeline (Orquestador Maestro)
+El archivo principal es `main.py`. Este funciona como tu tablero de control o "Director de Orquesta". Para ejecutar una etapa de la investigación, simplemente abre `main.py`, elimina el símbolo `#` de la etapa que deseas correr, vuelve a poner el `#` en las demás, y ejecuta:
+
+```bash
+python main.py
+```
+
+**Flujo lógico de ejecución que debe seguirse (Una sola vez por etapa):**
+1. **Etapa 1:** Lee de `data/1_raw_images/` y escribe en `data/2_preprocessed/` (Limpieza visual).
+2. **Etapa 2:** Lee de `data/2_preprocessed/` y guarda vectores matemáticos puros en `data/3_features/` (Gabor).
+3. **Etapa 3:** Lee los vectores pesados, los optimiza genéticamente reduciendo su tamaño y los guarda en `data/4_optimized/`.
+4. **Etapa 4:** Carga los datos finales, construye el clasificador SVM-RF y empaqueta la Inteligencia Artificial entrenada en disco duro dentro de `data/5_splits/`.
+5. **Etapa 5:** Somete a los modelos empaquetados al "Examen Final" (con el 30% ciego de Test), imprimiendo en la consola los porcentajes de Accuracy y generando los **Gráficos Científicos** en la carpeta `results/`.
 
 ---
 

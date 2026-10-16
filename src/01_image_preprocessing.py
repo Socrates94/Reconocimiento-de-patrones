@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 def setup_directories():
+    
     """Configura las rutas relativas del proyecto."""
     base_dir = Path(__file__).resolve().parent.parent
     raw_dir = base_dir / 'data' / '1_raw_images'
@@ -10,6 +11,7 @@ def setup_directories():
     return raw_dir, out_dir
 
 def preprocess_image(image_path, output_path):
+    
     """Aplica el pipeline de preprocesamiento del artículo a una imagen."""
     # 0. Cargar la imagen en escala de grises (necesario para CLAHE y biometría)
     img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
@@ -33,7 +35,7 @@ def preprocess_image(image_path, output_path):
 
 def run():
     print("======================================================")
-    print("  ETAPA 1: PREPROCESAMIENTO DE IMÁGENES BIOMÉTRICAS")
+    print("  Etapa no. 1: Preprocesamiento de imágenes biométricas")
     print("======================================================")
     
     raw_dir, out_dir = setup_directories()
