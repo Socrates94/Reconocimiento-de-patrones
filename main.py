@@ -14,10 +14,10 @@ def main():
     # Descomenta SOLO la etapa que necesites correr. 
     # El flujo natural es ejecutar desde la 1 hasta la 5 en orden.
     
-    # etapa1.run() # Lee imágenes crudas, aplica filtro mediana, resize y CLAHE
-    # etapa2.run() # Lee imágenes procesadas y extrae vectores Gabor
-    # etapa3.run() # Toma vectores masivos, aplica GA (Alg. Genético) y los reduce
-    # etapa4.run() # Parte datos (70/30), entrena SVM-RF híbrido y guarda en disco
+    etapa1.run() # Lee imágenes crudas, aplica filtro mediana, resize y CLAHE
+    etapa2.run() # Lee imágenes procesadas y extrae vectores Gabor
+    etapa3.run() # Toma vectores masivos, aplica GA (Alg. Genético) y los reduce
+    etapa4.run() # Parte datos (70/30), entrena SVM-RF híbrido y guarda en disco
     etapa5.run()   # Lee modelo e imprime métricas, curvas ROC y matriz de confusión
 
 if __name__ == "__main__":

@@ -30,23 +30,51 @@ def build_filters():
             filters.append(kern)
     return filters
 
-def process_image_gabor(img, filters):
+def process_image_gabor(img, filters, grid_size=(4, 4)):
     """
-    Aplica el banco de filtros a una imagen y extrae un Vector de Características.
-    Por cada filtro, sacamos la media y la varianza de la textura detectada.
+    Aplica el banco de filtros a una imagen y extrae un Vector de Características
+    espacial y frecuencial.
+    1. Usa cv2.CV_32F para no truncar a cero las respuestas armónicas negativas.
+    2. Además de media y varianza global, divide la imagen en una rejilla espacial
+       (ej. 4x4 cuadrantes) para capturar la distribución de textura en el espacio
+       (preservando la topología de ojos, boca, crestas de huella y estroma de iris).
     """
     features = []
+    h, w = img.shape[:2]
+    gh, gw = grid_size
+    step_h = h // gh
+    step_w = w // gw
+
     for kern in filters:
-        # Aplicamos la convolución del filtro sobre la imagen
-        fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
+        # Aplicamos la convolución con punto flotante 32-bit (conserva valores negativos)
+        fimg = cv2.filter2D(img, cv2.CV_32F, kern)
         
-        # Extraemos la estadística matemática de esa textura
-        mean = fimg.mean()
-        var = fimg.var()
-        features.extend([mean, var])
+        # 1. Estadísticas globales
+        features.extend([float(fimg.mean()), float(fimg.var())])
         
-    # Devolvemos un arreglo unidimensional de NumPy (El Embedding)
+        # 2. Estadísticas locales espaciales por bloques
+        for i in range(gh):
+            for j in range(gw):
+                block = fimg[i * step_h:(i + 1) * step_h, j * step_w:(j + 1) * step_w]
+                features.extend([float(block.mean()), float(block.var())])
+        
+    # Devolvemos un arreglo unidimensional de NumPy (El Embedding espacial-frecuencial)
     return np.array(features, dtype=np.float32)
+
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+def _worker_extract(task):
+    img_path, output_path, filters = task
+    try:
+        img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            return False
+        feature_vector = process_image_gabor(img, filters)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(str(output_path), feature_vector)
+        return True
+    except Exception as e:
+        return False
 
 def extract_features(image_path, output_path, filters):
     """Carga la imagen, extrae características y guarda el vector."""
@@ -55,15 +83,15 @@ def extract_features(image_path, output_path, filters):
         print(f"Advertencia: No se pudo cargar {image_path}")
         return False
     
-    # 1. Pasar por Gabor
+    # 1. Pasar por Gabor con cuadrícula espacial
     feature_vector = process_image_gabor(img, filters)
     
     # 2. Guardar como binario de NumPy (.npy)
-    # Ya no guardamos una foto, guardamos la matemática pura.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     np.save(str(output_path), feature_vector)
     return True
 
-def run():
+def run(max_workers=None):
     print("======================================================")
     print("  ETAPA 2: EXTRACCIÓN DE CARACTERÍSTICAS (GABOR)")
     print("======================================================")
@@ -77,26 +105,31 @@ def run():
     print("Construyendo el banco de filtros Gabor...")
     filters = build_filters()
     print(f"[+] Banco creado con {len(filters)} filtros espaciales distintos.")
+    print(f"[+] Rejilla espacial activa: 4x4 cuadrantes (408 dimensiones por vector).")
     
     supported_extensions = {'.jpg', '.jpeg', '.png', '.bmp'}
-    count = 0
-    print("\nIniciando extracción matemática... (Esto usará bastante CPU).")
+    tasks = []
     
+    print("\nRecolectando lista de imágenes para procesamiento en paralelo...")
     for img_path in proc_dir.rglob('*'):
         if img_path.is_file() and img_path.suffix.lower() in supported_extensions:
-            # Replicar la estructura de carpetas
             relative_path = img_path.relative_to(proc_dir)
-            
-            # ATENCIÓN: Ya no usamos extensiones de imagen (.jpg). Ahora son vectores (.npy)
             output_path = feat_dir / relative_path.with_suffix('.npy')
+            tasks.append((img_path, output_path, filters))
             
-            # Crear subcarpeta si no existe
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            if extract_features(img_path, output_path, filters):
+    total_tasks = len(tasks)
+    print(f"[+] Total de imágenes encontradas: {total_tasks}")
+    print(f"[+] Ejecutando extracción matemática con ProcessPoolExecutor (todos los núcleos)...")
+    
+    count = 0
+    # Procesamiento paralelo eficiente
+    workers = max_workers or max(1, os.cpu_count() or 4)
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        for ok in executor.map(_worker_extract, tasks, chunksize=100):
+            if ok:
                 count += 1
-                if count % 1000 == 0:
-                    print(f" -> Características extraídas de {count} imágenes...")
+                if count % 1000 == 0 or count == total_tasks:
+                    print(f" -> Características extraídas de {count}/{total_tasks} imágenes...")
                     
     print(f"\n[+] ¡Éxito! Extracción Gabor completada.")
     print(f"[+] Total de embeddings (vectores) creados: {count}")
